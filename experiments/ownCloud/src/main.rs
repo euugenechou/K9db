@@ -87,6 +87,7 @@ fn main() {
   };
 
   // Generate priming data.
+  eprintln!("--> Generating priming data");
   let mut st = GeneratorState::new();
   let users = st.generate_users(args.num_users);
   let files = st.generate_files(&users, args.files_per_user);
@@ -108,6 +109,7 @@ fn main() {
       user_to_group_map.insert(i, gi);
     }
   }
+  eprintln!("--> Generated priming data");
 
   // Parameters.
   let read_in_size = args.read_in_size;

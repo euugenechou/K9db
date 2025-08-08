@@ -2,6 +2,7 @@
 name = "ownCloud"
 version = "0.0.1"
 authors = ["Justus Adam <dev@justus.science"]
+edition = "2021"
 
 [dependencies]
 mysql = "20.1.0"

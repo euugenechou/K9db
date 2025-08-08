@@ -1,8 +1,6 @@
-extern crate mysql;
 use mysql::prelude::{FromValue, Queryable};
 use mysql::{Conn, OptsBuilder};
 
-extern crate memcached;
 use memcached::client::Client;
 use memcached::proto::{MultiOperation, NoReplyOperation, Operation};
 
@@ -59,7 +57,7 @@ fn decode_row(bytes: &[u8]) -> Vec<usize> {
 pub fn warmup(conn: &mut Conn, client: &mut Client) {
   // Get all the data.
   let rows = mariadb::read_all_with_data(conn);
-  
+
   // Group by user id (share_target)
   let mut map: HashMap<String, String> = HashMap::new();
   for row in rows {
@@ -153,10 +151,10 @@ pub fn direct(
   shares: &Vec<Share>,
 ) -> u128 {
   let now = std::time::Instant::now();
-  
+
   // Write to database.
   mariadb::direct(conn, shares);
-  
+
   let mut users: Vec<String> = Vec::with_capacity(shares.len());
   for share in shares {
     // Mark to invalidate.
@@ -166,7 +164,7 @@ pub fn direct(
       panic!("indirect called with direct!");
     }
   }
-  
+
   // Invalidate.
   let keys = users.iter().map(|u| u.as_bytes()).collect::<Vec<_>>();
   client.delete_multi(&keys);

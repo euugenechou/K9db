@@ -1,10 +1,8 @@
-#[macro_use]
-extern crate clap;
-
+use clap::*;
 use rand::Rng;
+use std::collections::HashMap;
 use std::io::Write;
 use std::time::{Duration, Instant};
-use std::collections::HashMap;
 
 // src/*.rs
 mod backend;
@@ -31,7 +29,7 @@ pub struct Args {
   pub perf: bool,
   pub warmup: bool,
   pub distr: Option<ZipfF>,
-  pub db_ip: String,
+  pub db_socket: String,
   pub all_owners: bool,
 }
 
@@ -55,7 +53,7 @@ fn main() {
                 (@arg perf: --perf "Wait for user input before starting workload to attach perf")
                 (@arg warmup: --warmup "Warmup the cache!")
                 (@arg distr: --zipf [s] "Use zipf distribution with a frequency rank exponent of 's' (default to uniform)")
-                (@arg db_ip: --db_ip ... +required +takes_value "IP of database server")
+                (@arg db_socket: --db_socket ... +required +takes_value "Socket of database server")
                 (@arg all_owners: --all_owners "Use the all owners schema")
         ).get_matches();
 
@@ -77,7 +75,7 @@ fn main() {
     perf: matches.is_present("perf"),
     warmup: matches.is_present("warmup"),
     distr: value_t!(matches, "distr", ZipfF).ok(),
-    db_ip: matches.value_of("db_ip").map(&str::to_string).unwrap(),
+    db_socket: matches.value_of("db_socket").map(&str::to_string).unwrap(),
     all_owners: matches.is_present("all_owners"),
   };
 
@@ -118,7 +116,8 @@ fn main() {
   let operations = args.operations;
 
   // Run the experiment for each provided backend.
-  let mut backend = Backend::from_str(&args.backend, &args.db_ip, args.all_owners);
+  let mut backend =
+    Backend::from_str(&args.backend, &args.db_socket, args.all_owners);
   eprintln!("--> Starting backend {}", backend);
 
   // Insert load (priming).
@@ -137,7 +136,10 @@ fn main() {
   }
 
   // Create a generator workload.
-  let mut workload = WorkloadGenerator::new(st, args.distr.unwrap_or(0.0) /* s = 0 is uniform distr */);
+  let mut workload = WorkloadGenerator::new(
+    st,
+    args.distr.unwrap_or(0.0), /* s = 0 is uniform distr */
+  );
 
   // Warmup.
   if args.warmup {
@@ -162,11 +164,18 @@ fn main() {
       batch_count -= write_every;
       if direct {
         direct = false;
-        let request = workload.make_direct_share(write_batch_size, &users, &files);
+        let request =
+          workload.make_direct_share(write_batch_size, &users, &files);
         dwrites.push(backend.run(&request));
       } else {
         direct = true;
-        let request = workload.make_group_share(write_batch_size, &users, &groups, &files, &user_to_group_map);
+        let request = workload.make_group_share(
+          write_batch_size,
+          &users,
+          &groups,
+          &files,
+          &user_to_group_map,
+        );
         gwrites.push(backend.run(&request));
       }
     } else {
@@ -175,14 +184,14 @@ fn main() {
       batch_count = batch_count + read_in_size;
     }
   }
-  
+
   batch_count = 0;
   for i in 0..(operations / 2) {
     if batch_count >= write_every {
       batch_count -= write_every;
       // do update file by pk
       let request = workload.make_update_file_pk(&files);
-      update_file_pk.push(backend.run(&request));  
+      update_file_pk.push(backend.run(&request));
     } else {
       let request = workload.make_get_file_pk(read_in_size, &files);
       read_file_pk.push(backend.run(&request));
@@ -222,17 +231,45 @@ fn main() {
     read_file_pk.sort();
     writeln!(f, "Read File PK: {}", read_file_pk.len());
     writeln!(f, "Read File PK [50]: {}", read_file_pk[read_file_pk.len() / 2]);
-    writeln!(f, "Read File PK [90]: {}", read_file_pk[read_file_pk.len() * 90 / 100]);
-    writeln!(f, "Read File PK [95]: {}", read_file_pk[read_file_pk.len() * 95 / 100]);
-    writeln!(f, "Read File PK [99]: {}", read_file_pk[read_file_pk.len() * 99 / 100]);
+    writeln!(
+      f,
+      "Read File PK [90]: {}",
+      read_file_pk[read_file_pk.len() * 90 / 100]
+    );
+    writeln!(
+      f,
+      "Read File PK [95]: {}",
+      read_file_pk[read_file_pk.len() * 95 / 100]
+    );
+    writeln!(
+      f,
+      "Read File PK [99]: {}",
+      read_file_pk[read_file_pk.len() * 99 / 100]
+    );
   }
 
   if update_file_pk.len() > 0 {
     update_file_pk.sort();
     writeln!(f, "Update File PK: {}", update_file_pk.len());
-    writeln!(f, "Update File PK [50]: {}", update_file_pk[update_file_pk.len() / 2]);
-    writeln!(f, "Update File PK [90]: {}", update_file_pk[update_file_pk.len() * 90 / 100]);
-    writeln!(f, "Update File PK [95]: {}", update_file_pk[update_file_pk.len() * 95 / 100]);
-    writeln!(f, "Update File PK [99]: {}", update_file_pk[update_file_pk.len() * 99 / 100]);
+    writeln!(
+      f,
+      "Update File PK [50]: {}",
+      update_file_pk[update_file_pk.len() / 2]
+    );
+    writeln!(
+      f,
+      "Update File PK [90]: {}",
+      update_file_pk[update_file_pk.len() * 90 / 100]
+    );
+    writeln!(
+      f,
+      "Update File PK [95]: {}",
+      update_file_pk[update_file_pk.len() * 95 / 100]
+    );
+    writeln!(
+      f,
+      "Update File PK [99]: {}",
+      update_file_pk[update_file_pk.len() * 99 / 100]
+    );
   }
 }

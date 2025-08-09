@@ -1,8 +1,11 @@
 [package]
 name = "vote-benchmark"
 version = "0.0.1"
-authors = ["The Noria developers <noria@pdos.csail.mit.edu>", "Ishan Sharma <isharm11@brown.edu>"]
-edition = "2018"
+authors = [
+    "The Noria developers <noria@pdos.csail.mit.edu>",
+    "Ishan Sharma <isharm11@brown.edu>",
+]
+edition = "2021"
 
 [dependencies]
 chrono = { version = "0.4.0", features = ["serde"] }
@@ -18,9 +21,6 @@ rand_distr = "0.2.2"
 tokio = { version = "0.2.0", features = ["full"] }
 tower-service = "0.3.0"
 zipf = "6.1.0"
-
-[lib]
-path = "src/clients/lib.rs"
 
 [[bin]]
 name = "vote-benchmark"

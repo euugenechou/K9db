@@ -1,4 +1,7 @@
-//#![feature(type_alias_impl_trait)]
+#![feature(type_alias_impl_trait)]
+
+mod clients;
+mod common;
 
 use clap::value_t_or_exit;
 use common::Timeline;
@@ -437,7 +440,7 @@ where
             }
         }
 
-        atomic::spin_loop_hint();
+        std::hint::spin_loop();
     }
 
     // we're done _generating_ requests, so we can measure generation throughput
@@ -591,11 +594,10 @@ fn main() {
         .subcommand(
             SubCommand::with_name("mysql")
                 .arg(
-                    Arg::with_name("address")
-                        .long("address")
+                    Arg::with_name("socket")
+                        .long("socket")
                         .takes_value(true)
                         .required(true)
-                        .default_value("127.0.0.1:3306")
                         .help("Address of MySQL server"),
                 )
                 .arg(

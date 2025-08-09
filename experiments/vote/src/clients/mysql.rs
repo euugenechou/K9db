@@ -1,11 +1,11 @@
 use clap;
-use common::{Parameters, ReadRequest, VoteClient, WriteRequest};
 use mysql_async::prelude::*;
 use std::future::Future;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 use tower_service::Service;
 
+use crate::common::{Parameters, ReadRequest, VoteClient, WriteRequest};
 pub struct Conn {
     pool: mysql_async::Pool,
     next: Option<mysql_async::Conn>,
@@ -50,12 +50,18 @@ impl Conn {
 impl VoteClient for Conn {
     type Future = impl Future<Output = Result<Self, failure::Error>> + Send;
     fn new(params: Parameters, args: clap::ArgMatches<'_>) -> <Self as VoteClient>::Future {
-        let addr = args.value_of("address").unwrap();
-        let addr = format!("mysql://k9db:password@{}", addr);
+        // let addr = args.value_of("address").unwrap();
+        // let addr = format!("mysql://k9db:password@{}", addr);
         let db = args.value_of("database").unwrap().to_string();
+        let socket = args.value_of("socket").unwrap().to_string();
 
         async move {
-            let opts = mysql_async::Opts::from_url(&addr).unwrap();
+            let mut opts = mysql_async::OptsBuilder::default();
+            opts.user(Some("k9db"));
+            opts.pass(Some("password"));
+            opts.socket(Some(socket));
+            let opts: mysql_async::Opts = opts.into();
+            // let opts = mysql_async::Opts::from_url(&addr).unwrap();
 
             if params.prime {
                 let mut opts = mysql_async::OptsBuilder::from_opts(opts.clone());

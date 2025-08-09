@@ -1,5 +1,4 @@
 use clap;
-use common::{Parameters, ReadRequest, VoteClient, WriteRequest};
 use mysql_async::prelude::*;
 use std::future::Future;
 use std::pin::Pin;
@@ -7,6 +6,8 @@ use std::sync::atomic::AtomicU32;
 use std::sync::atomic::Ordering;
 use std::task::{Context, Poll};
 use tower_service::Service;
+
+use crate::common::{Parameters, ReadRequest, VoteClient, WriteRequest};
 
 static VT_COUNTER: AtomicU32 = AtomicU32::new(0);
 
@@ -131,7 +132,7 @@ impl VoteClient for Conn {
                 //    conn = conn.drop_query(sql).await.unwrap();
                 //}
             } else {
-              VT_COUNTER.store(500000, Ordering::SeqCst)
+                VT_COUNTER.store(500000, Ordering::SeqCst)
             }
 
             // now we connect for real
@@ -209,7 +210,7 @@ impl Service<WriteRequest> for Conn {
                 conn = conn
                     .drop_exec(
                         "INSERT INTO vt (id, u, article_id) VALUES (?, 0, ?)",
-                        (VT_COUNTER.fetch_add(1, Ordering::SeqCst), article_id,),
+                        (VT_COUNTER.fetch_add(1, Ordering::SeqCst), article_id),
                     )
                     .await?;
             }

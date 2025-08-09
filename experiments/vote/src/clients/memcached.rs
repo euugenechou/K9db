@@ -1,5 +1,4 @@
 use clap;
-use common::{Parameters, ReadRequest, VoteClient, WriteRequest};
 use failure::{bail, ResultExt};
 use memcached;
 use memcached::proto::{MultiOperation, ProtoType};
@@ -7,6 +6,8 @@ use std::future::Future;
 use std::task::{Context, Poll};
 use tokio::sync::{mpsc, oneshot};
 use tower_service::Service;
+
+use crate::common::{Parameters, ReadRequest, VoteClient, WriteRequest};
 
 enum Req {
     Populate(Vec<(String, String, String)>),

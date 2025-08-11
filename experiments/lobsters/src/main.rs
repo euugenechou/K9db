@@ -1,4 +1,7 @@
 #![feature(type_alias_impl_trait)]
+#![feature(impl_trait_in_assoc_type)]
+
+mod endpoints;
 
 extern crate clap;
 extern crate futures_util;
@@ -21,6 +24,7 @@ use std::collections::HashMap;
 use std::sync::atomic::AtomicU32;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
+
 
 lazy_static! {
   // Entries between -1 (never occurs) and 100000 (always).
@@ -397,7 +401,7 @@ impl Service<TrawlerRequest> for MysqlTrawler {
                 let (c, with_notifications) = match variant {
                     Variant::Pelton => handle_req!(endpoints, req),
                 }?;
-                
+
                 let mut issue_notification = with_notifications && !priming;
                 if let BackendVariant::MariaDB = backend_variant {
                   issue_notification = false;

@@ -1,7 +1,10 @@
 [package]
 name = "lobsters-harness"
 version = "0.0.1"
-authors = ["The Noria developers <noria@pdos.csail.mit.edu>", "Ishan Sharma <isharm11@brown.edu>"]
+authors = [
+    "The Noria developers <noria@pdos.csail.mit.edu>",
+    "Ishan Sharma <isharm11@brown.edu>",
+]
 edition = "2018"
 
 [dependencies]
@@ -13,9 +16,6 @@ lazy_static = "1.0.0"
 mysql_async = "0.23.0"
 tower-service = "0.3.0"
 trawler = { git = "https://github.com/ms705/trawler.git", branch = "kinan-benchmarking" }
-
-[lib]
-path = "src/endpoints/lib.rs"
 
 [[bin]]
 name = "lobsters-harness"
@@ -31,4 +31,3 @@ targets = [
     "x86_64-pc-windows-msvc",
     "x86_64-unknown-linux-gnu",
 ]
-

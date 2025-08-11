@@ -64,6 +64,7 @@ impl VoteClient for Conn {
             // let opts = mysql_async::Opts::from_url(&addr).unwrap();
 
             if params.prime {
+                eprintln!("--> PRIMING START");
                 let mut opts = mysql_async::OptsBuilder::from_opts(opts.clone());
                 opts.db_name(None::<&str>);
                 //opts.init(vec![
@@ -111,9 +112,11 @@ impl VoteClient for Conn {
                     }
                     conn = conn.drop_query(sql).await.unwrap();
                 }
+                eprintln!("--> PRIMING DONE");
             }
 
             // now we connect for real
+            eprintln!("--> CONNECTING FOR REAL");
             let mut opts = mysql_async::OptsBuilder::from_opts(opts);
             opts.db_name(Some(db));
             //opts.init(vec![
@@ -121,6 +124,7 @@ impl VoteClient for Conn {
             //    "SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;",
             //]);
             opts.stmt_cache_size(10000);
+            eprintln!("--> RETURNING CONNECTION");
 
             Ok(Conn {
                 pool: mysql_async::Pool::new(opts),

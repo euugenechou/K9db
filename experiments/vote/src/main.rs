@@ -277,6 +277,9 @@ where
     let start = time::Instant::now();
     let end = start + runtime;
 
+    let issued_writes = atomic::AtomicU64::new(0);
+    let issued_reads = atomic::AtomicU64::new(0);
+
     // we *could* use a rayon::scope here to safely access stack variables from inside each job,
     // but that would *also* force us to place the load generators *on* the thread pool (because of
     // https://github.com/rayon-rs/rayon/issues/562). that comes with a number of unfortunate
@@ -369,8 +372,10 @@ where
         while next <= now {
             let id = id_rng.sample(&mut rng) as i32;
             let (batches, cap_hint, read) = if rng.gen_bool(1.0 / f64::from(every)) {
+                issued_writes.fetch_add(1, atomic::Ordering::AcqRel);
                 (&mut queued_w, &mut w_capacity, false)
             } else {
+                issued_reads.fetch_add(1, atomic::Ordering::AcqRel);
                 (&mut queued_r, &mut r_capacity, true)
             };
 
@@ -452,6 +457,16 @@ where
         nwrite.load(atomic::Ordering::Acquire),
         nread.load(atomic::Ordering::Acquire)
     );
+
+    {
+        let nwrites = issued_writes.load(atomic::Ordering::Acquire);
+        let nreads = issued_reads.load(atomic::Ordering::Acquire);
+        let nops = nwrites + nreads;
+        eprintln!(
+            "# issued after main run: {} writes, {} reads, ({} ops total)",
+            nwrites, nreads, nops
+        );
+    }
 
     // force the client to also complete their queue
     ex.block_on(async {

@@ -45,8 +45,9 @@ gazelle_dependencies(go_repository_default_config = "@//:WORKSPACE.bazel")
 
 http_archive(
     name = "com_google_protobuf",
-    strip_prefix = "protobuf-main",
-    urls = ["https://github.com/protocolbuffers/protobuf/archive/master.zip"],
+    urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.15.0.tar.gz"],
+    sha256 = "6aff9834fd7c540875e1836967c8d14c6897e3785a2efac629f69860fb7834ff",
+    strip_prefix = "protobuf-3.15.0",
 )
 
 load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
@@ -55,8 +56,9 @@ protobuf_deps()
 
 http_archive(
     name = "com_github_bazelbuild_buildtools",
-    strip_prefix = "buildtools-master",
-    url = "https://github.com/bazelbuild/buildtools/archive/master.zip",
+    urls = ["https://github.com/bazelbuild/buildtools/archive/refs/tags/4.0.0.zip"],
+    sha256 = "c3173b75c4ff06d78f69e8fa1e1693c188c80e4c5af74b518e4625b7d0f7c9c9",
+    strip_prefix = "buildtools-4.0.0",
 )
 
 # End of Buildifier

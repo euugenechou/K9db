@@ -42,6 +42,10 @@ bazel-K9db
 bazel-pelton
 bazel-testlogs
 
+# Bazel stuff
+MODULE.bazel
+MODULE.bazel.lock
+
 # Output directiory for testing
 .out
 test
@@ -59,7 +63,7 @@ cmake-build-debug/
 .DS_Store
 .vscode/
 
-# Rust 
+# Rust
 
 # Build directory
 target/

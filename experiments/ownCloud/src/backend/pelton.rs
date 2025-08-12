@@ -39,8 +39,10 @@ pub fn reads(
   let time = now.elapsed().as_micros();
 
   // Check result correct.
-  let mut results: Vec<_> =
-    rows.iter().map(|r| r.get::<usize, usize>(0).unwrap()).collect();
+  let mut results: Vec<_> = rows
+    .iter()
+    .map(|r| r.get::<usize, usize>(0).unwrap())
+    .collect();
   results.sort();
   if expected != &results {
     panic!(
@@ -65,10 +67,9 @@ pub fn update_file_pk(conn: &mut Conn, file: &File, new_name: String) -> u128 {
   mariadb::update_file_pk(conn, file, new_name)
 }
 
-
 // Inserts / Priming.
 pub fn insert_users(conn: &mut Conn, users: Vec<User>) {
-  for user in &users {
+  for (i, user) in users.iter().enumerate() {
     conn
       .query_drop(&format!(
         "INSERT INTO oc_users VALUES ('{uid}', '{uid}', '{pw}')",
@@ -81,9 +82,7 @@ pub fn insert_users(conn: &mut Conn, users: Vec<User>) {
 
 pub fn insert_groups(conn: &mut Conn, groups: Vec<Group>) {
   for group in &groups {
-    conn
-      .query_drop("CTX START;")
-      .unwrap();
+    conn.query_drop("CTX START;").unwrap();
     conn
       .query_drop(&format!("INSERT INTO oc_groups VALUES ('{}')", &group.gid))
       .unwrap();
@@ -95,49 +94,43 @@ pub fn insert_groups(conn: &mut Conn, groups: Vec<Group>) {
         ))
         .unwrap();
     });
-    conn
-      .query_drop("CTX COMMIT;")
-      .unwrap();
+    conn.query_drop("CTX COMMIT;").unwrap();
   }
 }
 
 pub fn insert_files(conn: &mut Conn, files: Vec<File>) {
   for file in &files {
-    conn
-      .query_drop("CTX START;")
-      .unwrap();
+    conn.query_drop("CTX START;").unwrap();
     conn
       .query_drop(&format!(
         "INSERT INTO oc_files VALUES ({}, '{}')",
         file.id, file.id
       ))
       .unwrap();
-    conn
-      .query_drop("CTX ROLLBACK;")
-      .unwrap();
+    conn.query_drop("CTX ROLLBACK;").unwrap();
   }
 }
 
 pub fn insert_shares(conn: &mut Conn, shares: Vec<Share>) {
   for share in &shares {
     let (share_type, user_target, group_target) = match &share.share_with {
-    ShareType::Direct(u) => (0, quoted(&u.uid), "NULL".to_string()),
-    ShareType::Group(g) => (1, "NULL".to_string(), quoted(&g.gid)),
-  };
-  conn
-    .query_drop(format!(
-      "INSERT INTO oc_share VALUES ({share_id}, \
+      ShareType::Direct(u) => (0, quoted(&u.uid), "NULL".to_string()),
+      ShareType::Group(g) => (1, "NULL".to_string(), quoted(&g.gid)),
+    };
+    conn
+      .query_drop(format!(
+        "INSERT INTO oc_share VALUES ({share_id}, \
                            {share_type}, {user_target}, {group_target}, \
                            '{owner}', '{initiator}', NULL, 'file', {file}, \
                            '', '', 24, 0, 0, NULL, '', 1, '', 24, '19');",
-      share_id = share.id,
-      user_target = user_target,
-      group_target = group_target,
-      share_type = share_type,
-      owner = share.file.owned_by,
-      initiator = share.file.owned_by,
-      file = share.file.id,
-    ))
-    .unwrap();
+        share_id = share.id,
+        user_target = user_target,
+        group_target = group_target,
+        share_type = share_type,
+        owner = share.file.owned_by,
+        initiator = share.file.owned_by,
+        file = share.file.id,
+      ))
+      .unwrap();
   }
 }

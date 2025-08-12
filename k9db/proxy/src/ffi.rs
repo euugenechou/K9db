@@ -13,9 +13,9 @@ pub mod k9db {
   pub use ffi::FFIConnection;
   pub use ffi::FFIPreparedResult;
   pub use ffi::FFIPreparedStatement;
-  pub use ffi::{FFIResult, FFIUpdateResult};
   pub use ffi::{FFIColumnType_DATETIME, FFIColumnType_INT, FFIColumnType_TEXT,
                 FFIColumnType_UINT};
+  pub use ffi::{FFIResult, FFIUpdateResult};
 
   // Dependencies from ffi crate.
   use std::ffi::{CStr, CString};
@@ -26,7 +26,7 @@ pub mod k9db {
     pub workers: usize,
     pub consistent: bool,
     pub db_name: String,
-    pub hostname: String,
+    pub socket: String,
     pub db_path: String,
   }
 
@@ -47,19 +47,23 @@ pub mod k9db {
     // Transform FFIArgs to CommandLineArgs.
     let db_name = unsafe { CStr::from_ptr(flags.db_name) };
     let db_name = db_name.to_str().unwrap();
-    let hostname = unsafe { CStr::from_ptr(flags.hostname) };
-    let hostname = hostname.to_str().unwrap();
+    let socket = unsafe { CStr::from_ptr(flags.socket) };
+    let socket = socket.to_str().unwrap();
     let db_path = unsafe { CStr::from_ptr(flags.db_path) };
     let db_path = db_path.to_str().unwrap();
     return CommandLineArgs { workers: flags.workers,
                              consistent: flags.consistent,
                              db_name: db_name.to_string(),
-                             hostname: hostname.to_string(),
+                             socket: socket.to_string(),
                              db_path: db_path.to_string() };
   }
 
   // Starting and stopping the proxy.
-  pub fn initialize(workers: usize, consistent: bool, db: &str, path: &str) -> bool {
+  pub fn initialize(workers: usize,
+                    consistent: bool,
+                    db: &str,
+                    path: &str)
+                    -> bool {
     let db = CString::new(db).unwrap();
     let db = db.as_ptr();
     let path = CString::new(path).unwrap();

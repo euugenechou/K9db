@@ -14,7 +14,7 @@ typedef struct {
   size_t workers;
   bool consistent;
   const char *db_name;
-  const char *hostname;
+  const char *socket;
   const char *db_path;
 } FFIArgs;
 

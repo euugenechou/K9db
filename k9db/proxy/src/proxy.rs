@@ -14,12 +14,13 @@ use msql_srv::*;
 use slog::Drain;
 use std::io;
 use std::io::Write;
-use std::net;
+// use std::net;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 // Help message.
-const USAGE: &str = "K9db options: look below for 'Flags from k9db/proxy/src/ffi/ffi.cc'";
+const USAGE: &str =
+  "K9db options: look below for 'Flags from k9db/proxy/src/ffi/ffi.cc'";
 
 // Helper for translating k9db types to msql-srv types.
 fn convert_type(coltype: k9db::FFIColumnType) -> msql_srv::ColumnType {
@@ -92,7 +93,7 @@ fn write_result<W: io::Write>(writer: msql_srv::QueryResultWriter<W>,
   let mut i = 0;
   while k9db::result::next_resultset(result) {
     i += 1;
-    let columns = &cv[i-1];
+    let columns = &cv[i - 1];
     let mut rw = writer.start(columns).unwrap();
 
     let rows = k9db::result::row_count(result);
@@ -352,19 +353,22 @@ fn main() {
         flags.workers,
         flags.consistent,
         flags.db_name,
-        flags.hostname,
+        flags.socket,
         flags.db_path);
 
-  let global_open = k9db::initialize(flags.workers, flags.consistent, &flags.db_name, &flags.db_path);
+  let global_open = k9db::initialize(flags.workers,
+                                     flags.consistent,
+                                     &flags.db_name,
+                                     &flags.db_path);
   if !global_open {
     std::process::exit(-1);
   }
 
-  let listener = net::TcpListener::bind(flags.hostname).unwrap();
+  let listener = std::os::unix::net::UnixListener::bind(flags.socket).unwrap();
+  // let listener = net::TcpListener::bind(flags.hostname).unwrap();
   info!(log, "Rust Proxy: Listening at: {:?}", listener);
   listener.set_nonblocking(true)
           .expect("Cannot set non-blocking");
-
 
   // store client thread handles
   let mut threads = Vec::new();
@@ -372,11 +376,14 @@ fn main() {
   // run listener until terminated with SIGTERM
   while !stop.load(Ordering::Relaxed) {
     while let Ok((stream, _addr)) = listener.accept() {
-      stream.set_nodelay(true).expect("Cannot disable nagle");
+      // stream.set_nodelay(true).expect("Cannot disable nagle");
       // clone log so that each client thread has an owned copy
       let log = log.clone();
       threads.push(std::thread::spawn(move || {
-                     let bufwriter = io::BufWriter::with_capacity(10000000, stream.try_clone().unwrap());
+                     let bufwriter =
+                       io::BufWriter::with_capacity(10000000,
+                                                    stream.try_clone()
+                                                          .unwrap());
                      info!(log,
                            "Rust Proxy: Successfully connected to mysql \
                             proxy\nStream and address are: {:?}",
@@ -384,8 +391,8 @@ fn main() {
                      let rust_conn = k9db::open();
                      let backend = Backend { rust_conn: rust_conn,
                                              log: log };
-                     let _ =
-                       MysqlIntermediary::run_on(backend, stream, bufwriter).unwrap();
+                     let _ = MysqlIntermediary::run_on(backend, stream,
+                                                       bufwriter).unwrap();
                    }));
     }
     // wait before checking listener status

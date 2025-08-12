@@ -19,14 +19,12 @@ const ALL_OWNERS_SCHEMA: &'static str =
   include_str!("../data/schema-owners.sql");
 const MARIADB_SCHEMA: &'static str = include_str!("../data/mysql-schema.sql");
 
-pub fn pelton_connect(ip: &str, all_owners: bool) -> Conn {
+pub fn pelton_connect(socket: &str, all_owners: bool) -> Conn {
   // Start a connection.
   let opts = OptsBuilder::new()
     .user(Some(DB_USER))
     .pass(Some(DB_PASSWORD))
-    .tcp_port(10001)
-    .ip_or_hostname(Some(ip))
-    .tcp_nodelay(true);
+    .socket(Some(socket));
   let mut connection = Conn::new(opts).unwrap();
   // Create the schema.
   if all_owners {

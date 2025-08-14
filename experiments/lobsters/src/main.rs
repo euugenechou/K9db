@@ -508,10 +508,31 @@ fn main() {
                 .long_help("There are multiple histograms, two for each lobsters request."),
         )
         .arg(
+            Arg::with_name("socket")
+                .long("socket")
+                .takes_value(true)
+                .default_value("/tmp/db.sock")
+                .help("Database socket"),
+        )
+        .arg(
+            Arg::with_name("username")
+                .long("username")
+                .takes_value(true)
+                .default_value("k9db")
+                .help("Database username"),
+        )
+        .arg(
+            Arg::with_name("password")
+                .long("password")
+                .takes_value(true)
+                .default_value("password")
+                .help("Database password"),
+        )
+        .arg(
             Arg::with_name("dbn")
                 .value_name("DBN")
                 .takes_value(true)
-                .default_value("mysql://lobsters@localhost/soup")
+                .default_value("soup")
                 .index(1),
         )
         .get_matches();
@@ -540,11 +561,25 @@ fn main() {
     }
 
     // check that we can indeed connect
-    let mut opts = my::OptsBuilder::from_opts(args.value_of("dbn").unwrap());
-    opts.tcp_nodelay(true);
+    // let mut opts = my::OptsBuilder::from_opts(args.value_of("dbn").unwrap());
+    // opts.tcp_nodelay(true);
+    // opts.pool_options(my::PoolOptions::with_constraints(
+    //     my::PoolConstraints::new(in_flight, in_flight).unwrap(),
+    // ));
+
+    let username = args.value_of("username").unwrap();
+    let password = args.value_of("password").unwrap();
+    let socket = args.value_of("socket").unwrap();
+    let dbn = args.value_of("dbn").unwrap();
+    let mut opts = my::OptsBuilder::new();
+    opts.user(Some(username));
+    opts.pass(Some(password));
+    opts.socket(Some(socket));
+    opts.db_name(Some(dbn));
     opts.pool_options(my::PoolOptions::with_constraints(
         my::PoolConstraints::new(in_flight, in_flight).unwrap(),
     ));
+
     // Atomic counter to generate ids for stories. This serves as a replacement for auto
     // increment the id column.
     // Preserve a parent counter so that it does not go out of scope.

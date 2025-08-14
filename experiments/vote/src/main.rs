@@ -613,7 +613,7 @@ fn main() {
                         .long("socket")
                         .takes_value(true)
                         .required(true)
-                        .help("Address of MySQL server"),
+                        .help("Socket of MySQL server"),
                 )
                 .arg(
                     Arg::with_name("database")
@@ -627,12 +627,11 @@ fn main() {
         .subcommand(
             SubCommand::with_name("pelton")
                 .arg(
-                    Arg::with_name("address")
-                        .long("address")
+                    Arg::with_name("socket")
+                        .long("socket")
                         .takes_value(true)
                         .required(true)
-                        .default_value("127.0.0.1:10001")
-                        .help("Address of MySQL server"),
+                        .help("Socket of Pelton server"),
                 )
                 .arg(
                     Arg::with_name("database")
@@ -640,7 +639,7 @@ fn main() {
                         .takes_value(true)
                         .required(true)
                         .default_value("soup")
-                        .help("MySQL database to use"),
+                        .help("Pelton database to use"),
                 ),
         )
         .subcommand(
